@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Channel",""],["Chroma",""],["ColorSpace",""],["CompressionFormat",""],["EncoderParameterType",""],["EncoderParameterValue",""],["EncoderQuality",""],["HeifErrorCode",""],["HeifErrorSubCode",""]],"struct":[["EncodingOptions",""],["HeifContext",""],["HeifError",""],["Image",""],["ImageHandle",""]],"type":[["EncoderParametersTypes",""]]});
