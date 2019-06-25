@@ -249,6 +249,9 @@
 <span id="249">249</span>
 <span id="250">250</span>
 <span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CString</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>;
@@ -260,9 +263,10 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">enums</span>::{<span class="ident">Chroma</span>, <span class="ident">ColorSpace</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">HeifError</span>, <span class="ident">HeifErrorCode</span>, <span class="ident">HeifErrorSubCode</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">cstr_to_str</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">image</span>, <span class="ident">Image</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">image</span>, <span class="ident">HeifContext</span>, <span class="ident">Image</span>};
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImageHandle</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImageHandle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HeifContext</span>,
     <span class="ident">inner</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">heif_image_handle</span>,
 }
 
@@ -280,7 +284,14 @@
 <span class="comment">//    pub depth_nonlinear_representation_model: *mut u8,</span>
 <span class="comment">//}</span>
 
-<span class="kw">impl</span> <span class="ident">ImageHandle</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ImageHandle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">HeifContext</span>, <span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">heif_image_handle</span>) <span class="op">-&gt;</span> <span class="ident">ImageHandle</span> {
+        <span class="ident">ImageHandle</span> {
+            <span class="ident">inner</span>: <span class="ident">handle</span>,
+            <span class="ident">context</span>,
+        }
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">colorspace</span>: <span class="ident">ColorSpace</span>, <span class="ident">chroma</span>: <span class="ident">Chroma</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Image</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">image</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">uninitialized</span>() };
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">heif_decoding_options_alloc</span>() };
@@ -371,7 +382,7 @@
             )
         };
         <span class="ident">HeifError</span>::<span class="ident">from_heif_error</span>(<span class="ident">err</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">heif_image_handle_2_rs_image_handle</span>(<span class="ident">out_depth_handler</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">ImageHandle</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">context</span>, <span class="ident">out_depth_handler</span>))
     }
 
     <span class="comment">//    pub fn get_depth_image_representation_info(&amp;self, depth_image_id: ItemId) {</span>
@@ -411,7 +422,7 @@
             <span class="ident">heif_image_handle_get_thumbnail</span>(<span class="self">self</span>.<span class="ident">inner</span>, <span class="ident">thumbnail_id</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">out_thumbnail_handler</span>)
         };
         <span class="ident">HeifError</span>::<span class="ident">from_heif_error</span>(<span class="ident">err</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">heif_image_handle_2_rs_image_handle</span>(<span class="ident">out_thumbnail_handler</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">ImageHandle</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">context</span>, <span class="ident">out_thumbnail_handler</span>))
     }
 
     <span class="comment">// Metadata</span>
@@ -491,15 +502,10 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">ImageHandle</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">ImageHandle</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">unsafe</span> { <span class="ident">heif_image_handle_release</span>(<span class="self">self</span>.<span class="ident">inner</span>) };
     }
-}
-
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">heif_image_handle_2_rs_image_handle</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">heif_image_handle</span>) <span class="op">-&gt;</span> <span class="ident">ImageHandle</span> {
-    <span class="ident">ImageHandle</span> { <span class="ident">inner</span>: <span class="ident">handle</span> }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../";window.currentCrate = "libheif_rs";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

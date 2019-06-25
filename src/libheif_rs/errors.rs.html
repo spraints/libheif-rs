@@ -109,10 +109,6 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
@@ -200,11 +196,7 @@
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">HeifError</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(
-            <span class="ident">f</span>,
-            <span class="string">&quot;Error {:?}-{:?} {}&quot;</span>,
-            <span class="self">self</span>.<span class="ident">code</span>, <span class="self">self</span>.<span class="ident">sub_code</span>, <span class="self">self</span>.<span class="ident">message</span>
-        )
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}({:?}) {}&quot;</span>, <span class="self">self</span>.<span class="ident">code</span>, <span class="self">self</span>.<span class="ident">sub_code</span>, <span class="self">self</span>.<span class="ident">message</span>)
     }
 }
 
