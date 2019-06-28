@@ -166,6 +166,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>;
 
 <span class="kw">use</span> <span class="ident">libheif_sys</span>::<span class="kw-2">*</span>;
@@ -173,29 +174,12 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">encoder</span>::{<span class="ident">Encoder</span>, <span class="ident">EncodingOptions</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">enums</span>::<span class="ident">CompressionFormat</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">image</span>::<span class="ident">Image</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">reader</span>::{<span class="ident">Reader</span>, <span class="ident">HEIF_READER</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">HeifError</span>, <span class="ident">HeifErrorCode</span>, <span class="ident">HeifErrorSubCode</span>, <span class="ident">ImageHandle</span>};
-
-<span class="comment">//#[derive(Debug)]</span>
-<span class="comment">//pub struct DecodeOptions {</span>
-<span class="comment">//    inner: *mut heif_decoding_options,</span>
-<span class="comment">//}</span>
-<span class="comment">//</span>
-<span class="comment">//impl DecodeOptions {</span>
-<span class="comment">//    pub fn new() -&gt; DecodeOptions {</span>
-<span class="comment">//        DecodeOptions {</span>
-<span class="comment">//            inner: unsafe { heif_decoding_options_alloc() },</span>
-<span class="comment">//        }</span>
-<span class="comment">//    }</span>
-<span class="comment">//}</span>
-<span class="comment">//</span>
-<span class="comment">//impl Drop for DecodeOptions {</span>
-<span class="comment">//    fn drop(&amp;mut self) {</span>
-<span class="comment">//        unsafe { heif_decoding_options_free(self.inner) };</span>
-<span class="comment">//    }</span>
-<span class="comment">//}</span>
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeifContext</span> {
     <span class="ident">inner</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">heif_context</span>,
+    <span class="ident">reader</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Reader</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">HeifContext</span> {
@@ -209,7 +193,10 @@
                 <span class="ident">message</span>: <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>),
             })
         } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">HeifContext</span> { <span class="ident">inner</span>: <span class="ident">ctx</span> })
+            <span class="prelude-val">Ok</span>(<span class="ident">HeifContext</span> {
+                <span class="ident">inner</span>: <span class="ident">ctx</span>,
+                <span class="ident">reader</span>: <span class="prelude-val">None</span>,
+            })
         }
     }
 
@@ -238,11 +225,24 @@
         <span class="prelude-val">Ok</span>(<span class="ident">context</span>)
     }
 
+    <span class="doccomment">/// Create a new context from reader.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_from_reader</span>(<span class="ident">reader</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Reader</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HeifContext</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">HeifContext</span>::<span class="ident">new</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reader_box</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">reader</span>);
+        <span class="kw">let</span> <span class="ident">user_data</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">reader_box</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>;
+        <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">unsafe</span> {
+            <span class="ident">heif_context_read_from_reader</span>(<span class="ident">context</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="ident">HEIF_READER</span>, <span class="ident">user_data</span>, <span class="ident">ptr</span>::<span class="ident">null</span>())
+        };
+        <span class="ident">HeifError</span>::<span class="ident">from_heif_error</span>(<span class="ident">err</span>)<span class="question-mark">?</span>;
+        <span class="ident">context</span>.<span class="ident">reader</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">reader_box</span>);
+        <span class="prelude-val">Ok</span>(<span class="ident">context</span>)
+    }
+
     <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">vector_writer</span>(
         <span class="ident">_ctx</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">heif_context</span>,
-        <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> ::<span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>,
+        <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_void</span>,
         <span class="ident">size</span>: <span class="ident">usize</span>,
-        <span class="ident">user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>,
+        <span class="ident">user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>,
     ) <span class="op">-&gt;</span> <span class="ident">heif_error</span> {
         <span class="kw">let</span> <span class="ident">vec</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="ident">user_data</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
         <span class="ident">vec</span>.<span class="ident">reserve</span>(<span class="ident">size</span>);
@@ -258,7 +258,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_to_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="ident">pointer_to_res</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">res</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> ::<span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>;
+        <span class="kw">let</span> <span class="ident">pointer_to_res</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">res</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">heif_writer</span> {
             <span class="ident">writer_api_version</span>: <span class="number">1</span>,
