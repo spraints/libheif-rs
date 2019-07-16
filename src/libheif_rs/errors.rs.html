@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/errors.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>errors.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../libheif_rs/index.html'><img src='../../rust-logo.png' alt='logo' width='100'></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/errors.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>errors.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../libheif_rs/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -109,82 +109,86 @@
 <span id="109">109</span>
 <span id="110">110</span>
 <span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
 
 <span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Fail</span>;
-<span class="kw">use</span> <span class="ident">libheif_sys</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">num</span>;
+<span class="kw">use</span> <span class="ident">libheif_sys</span> <span class="kw">as</span> <span class="ident">lh</span>;
+<span class="kw">use</span> <span class="ident">num_derive</span>::<span class="ident">FromPrimitive</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">FromPrimitive</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">HeifErrorCode</span> {
-    <span class="ident">InputDoesNotExist</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Input_does_not_exist</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">InvalidInput</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Invalid_input</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedFiletype</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Unsupported_filetype</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedFeature</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Unsupported_feature</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UsageError</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Usage_error</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">MemoryAllocationError</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Memory_allocation_error</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">DecoderPluginError</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Decoder_plugin_error</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">EncoderPluginError</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Encoder_plugin_error</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">EncodingError</span> <span class="op">=</span> <span class="ident">heif_error_code_heif_error_Encoding_error</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InputDoesNotExist</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Input_does_not_exist</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InvalidInput</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Invalid_input</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedFileType</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Unsupported_filetype</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedFeature</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Unsupported_feature</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UsageError</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Usage_error</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">MemoryAllocationError</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Memory_allocation_error</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">DecoderPluginError</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Decoder_plugin_error</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">EncoderPluginError</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Encoder_plugin_error</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">EncodingError</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_error_code_heif_error_Encoding_error</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">ContextCreateFailed</span>,
     <span class="ident">Unknown</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">FromPrimitive</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">HeifErrorSubCode</span> {
-    <span class="ident">Unspecified</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unspecified</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">EndOfData</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_End_of_data</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">InvalidBoxSize</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Invalid_box_size</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoFtypBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_ftyp_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIdatBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_idat_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoMetaBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_meta_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoHdlrBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_hdlr_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoHvccBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_hvcC_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoPitmBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_pitm_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIpcoBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_ipco_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIpmaBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_ipma_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIlocBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_iloc_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIinfBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_iinf_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIprpBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_iprp_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoIrefBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_iref_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoPictHandler</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_pict_handler</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">IpmaBoxReferencesNonexistingProperty</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_Ipma_box_references_nonexisting_property</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">Unspecified</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unspecified</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">EndOfData</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_End_of_data</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InvalidBoxSize</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Invalid_box_size</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoFtypBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_ftyp_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIdatBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_idat_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoMetaBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_meta_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoHdlrBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_hdlr_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoHvccBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_hvcC_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoPitmBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_pitm_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIpcoBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_ipco_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIpmaBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_ipma_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIlocBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_iloc_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIinfBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_iinf_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIprpBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_iprp_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoIrefBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_iref_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoPictHandler</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_pict_handler</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">IpmaBoxReferencesNonExistingProperty</span> <span class="op">=</span>
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Ipma_box_references_nonexisting_property</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">NoPropertiesAssignedToItem</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_No_properties_assigned_to_item</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoItemData</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_item_data</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">InvalidGridData</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Invalid_grid_data</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">MissingGridImages</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Missing_grid_images</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">InvalidCleanAperture</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Invalid_clean_aperture</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">InvalidOverlayData</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Invalid_overlay_data</span> <span class="kw">as</span> <span class="kw">_</span>,
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_properties_assigned_to_item</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoItemData</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_item_data</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InvalidGridData</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Invalid_grid_data</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">MissingGridImages</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Missing_grid_images</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InvalidCleanAperture</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Invalid_clean_aperture</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InvalidOverlayData</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Invalid_overlay_data</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">OverlayImageOutsideOfCanvas</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_Overlay_image_outside_of_canvas</span> <span class="kw">as</span> <span class="kw">_</span>,
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Overlay_image_outside_of_canvas</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">AuxiliaryImageTypeUnspecified</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_Auxiliary_image_type_unspecified</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoOrInvalidPrimaryItem</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_or_invalid_primary_item</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NoInfeBox</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_No_infe_box</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnknownColorProfileType</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unknown_color_profile_type</span> <span class="kw">as</span> <span class="kw">_</span>,
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Auxiliary_image_type_unspecified</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoOrInvalidPrimaryItem</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_or_invalid_primary_item</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NoInfeBox</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_No_infe_box</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnknownColorProfileType</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unknown_color_profile_type</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">WrongTileImageChromaFormat</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_Wrong_tile_image_chroma_format</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">SecurityLimitExceeded</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Security_limit_exceeded</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NonexistingItemReferenced</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Nonexisting_item_referenced</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NullPointerArgument</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Null_pointer_argument</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">NonexistingImageChannelReferenced</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_Nonexisting_image_channel_referenced</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedPluginVersion</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_plugin_version</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedWriterVersion</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_writer_version</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedParameter</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_parameter</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">InvalidParameterValue</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Invalid_parameter_value</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedCodec</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_codec</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedImageType</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_image_type</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedDataVersion</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_data_version</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedColorConversion</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_color_conversion</span> <span class="kw">as</span> <span class="kw">_</span>,
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Wrong_tile_image_chroma_format</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">SecurityLimitExceeded</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Security_limit_exceeded</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NonExistingItemReferenced</span> <span class="op">=</span>
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Nonexisting_item_referenced</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NullPointerArgument</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Null_pointer_argument</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">NonExistingImageChannelReferenced</span> <span class="op">=</span>
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Nonexisting_image_channel_referenced</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedPluginVersion</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_plugin_version</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedWriterVersion</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_writer_version</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedParameter</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_parameter</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">InvalidParameterValue</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Invalid_parameter_value</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedCodec</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_codec</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedImageType</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_image_type</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedDataVersion</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_data_version</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedColorConversion</span> <span class="op">=</span>
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_color_conversion</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">UnsupportedItemConstructionMethod</span> <span class="op">=</span>
-        <span class="ident">heif_suberror_code_heif_suberror_Unsupported_item_construction_method</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">UnsupportedBitDepth</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Unsupported_bit_depth</span> <span class="kw">as</span> <span class="kw">_</span>,
-    <span class="ident">CannotWriteOutputData</span> <span class="op">=</span> <span class="ident">heif_suberror_code_heif_suberror_Cannot_write_output_data</span> <span class="kw">as</span> <span class="kw">_</span>,
+        <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_item_construction_method</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">UnsupportedBitDepth</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Unsupported_bit_depth</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">CannotWriteOutputData</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Cannot_write_output_data</span> <span class="kw">as</span> <span class="kw">_</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Fail</span>)]</span>
@@ -201,7 +205,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">HeifError</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_heif_error</span>(<span class="ident">err</span>: <span class="ident">heif_error</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_heif_error</span>(<span class="ident">err</span>: <span class="ident">lh</span>::<span class="ident">heif_error</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">HeifError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">code</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
