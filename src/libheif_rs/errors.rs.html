@@ -111,11 +111,11 @@
 <span id="111">111</span>
 <span id="112">112</span>
 <span id="113">113</span>
+<span id="114">114</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
 
-<span class="kw">use</span> <span class="ident">failure</span>::<span class="ident">Fail</span>;
 <span class="kw">use</span> <span class="ident">libheif_sys</span> <span class="kw">as</span> <span class="ident">lh</span>;
 <span class="kw">use</span> <span class="ident">num_derive</span>::<span class="ident">FromPrimitive</span>;
 
@@ -191,12 +191,14 @@
     <span class="ident">CannotWriteOutputData</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_suberror_code_heif_suberror_Cannot_write_output_data</span> <span class="kw">as</span> <span class="kw">_</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Fail</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HeifError</span> {
     <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">HeifErrorCode</span>,
     <span class="kw">pub</span> <span class="ident">sub_code</span>: <span class="ident">HeifErrorSubCode</span>,
     <span class="kw">pub</span> <span class="ident">message</span>: <span class="ident">String</span>,
 }
+
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">HeifError</span><span class="op">&gt;</span>;
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">HeifError</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
@@ -205,7 +207,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">HeifError</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_heif_error</span>(<span class="ident">err</span>: <span class="ident">lh</span>::<span class="ident">heif_error</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_heif_error</span>(<span class="ident">err</span>: <span class="ident">lh</span>::<span class="ident">heif_error</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">code</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }

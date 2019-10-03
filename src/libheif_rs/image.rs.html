@@ -262,9 +262,12 @@
 <span id="262">262</span>
 <span id="263">263</span>
 <span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">MaybeUninit</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_int</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>;
@@ -272,8 +275,8 @@
 
 <span class="kw">use</span> <span class="ident">libheif_sys</span> <span class="kw">as</span> <span class="ident">lh</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">enums</span>::{<span class="ident">Channel</span>, <span class="ident">Chroma</span>, <span class="ident">ColorSpace</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">HeifError</span>, <span class="ident">HeifErrorCode</span>, <span class="ident">HeifErrorSubCode</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">enums</span>::{<span class="ident">Channel</span>, <span class="ident">ColorSpace</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">errors</span>::{<span class="ident">HeifError</span>, <span class="ident">HeifErrorCode</span>, <span class="ident">HeifErrorSubCode</span>, <span class="prelude-ty">Result</span>};
 
 <span class="kw">const</span> <span class="ident">MAX_IMAGE_SIZE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">i32</span>::<span class="ident">MAX</span> <span class="kw">as</span> <span class="kw">_</span>;
 
@@ -303,12 +306,10 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ScalingOptions</span> {}
 
 <span class="kw">impl</span> <span class="ident">Image</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">width</span>: <span class="ident">u32</span>,
-        <span class="ident">height</span>: <span class="ident">u32</span>,
-        <span class="ident">colorspace</span>: <span class="ident">ColorSpace</span>,
-        <span class="ident">chroma</span>: <span class="ident">Chroma</span>,
-    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Image</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Create a new image of the specified resolution and colorspace.</span>
+    <span class="doccomment">/// Note: no memory for the actual image data is reserved yet. You have to use</span>
+    <span class="doccomment">/// Image::create_plane() to add the image planes required by your colorspace.    </span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>, <span class="ident">color_space</span>: <span class="ident">ColorSpace</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Image</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">width</span> <span class="op">&gt;</span> <span class="ident">MAX_IMAGE_SIZE</span> <span class="op">||</span> <span class="ident">height</span> <span class="op">&gt;</span> <span class="ident">MAX_IMAGE_SIZE</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">HeifError</span> {
                 <span class="ident">code</span>: <span class="ident">HeifErrorCode</span>::<span class="ident">UsageError</span>,
@@ -322,8 +323,8 @@
             <span class="ident">lh</span>::<span class="ident">heif_image_create</span>(
                 <span class="ident">width</span> <span class="kw">as</span> <span class="kw">_</span>,
                 <span class="ident">height</span> <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">colorspace</span> <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">chroma</span> <span class="kw">as</span> <span class="kw">_</span>,
+                <span class="ident">color_space</span>.<span class="ident">heif_color_space</span>(),
+                <span class="ident">color_space</span>.<span class="ident">heif_chroma</span>(),
                 <span class="ident">c_image</span>.<span class="ident">as_mut_ptr</span>(),
             )
         };
@@ -338,7 +339,7 @@
         <span class="ident">Image</span> { <span class="ident">inner</span>: <span class="ident">image</span> }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="ident">Channel</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="ident">Channel</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">lh</span>::<span class="ident">heif_image_get_width</span>(<span class="self">self</span>.<span class="ident">inner</span>, <span class="ident">channel</span> <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>);
@@ -350,7 +351,7 @@
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="ident">Channel</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="ident">Channel</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">lh</span>::<span class="ident">heif_image_get_height</span>(<span class="self">self</span>.<span class="ident">inner</span>, <span class="ident">channel</span> <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>);
@@ -362,7 +363,7 @@
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bits_per_pixel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="ident">Channel</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bits_per_pixel</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">channel</span>: <span class="ident">Channel</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">lh</span>::<span class="ident">heif_image_get_bits_per_pixel</span>(<span class="self">self</span>.<span class="ident">inner</span>, <span class="ident">channel</span> <span class="kw">as</span> <span class="kw">_</span>) };
         <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>);
@@ -384,6 +385,7 @@
         <span class="kw">let</span> <span class="ident">bits_pre_pixel</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bits_per_pixel</span>(<span class="ident">channel</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stride</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">lh</span>::<span class="ident">heif_image_get_plane</span>(<span class="self">self</span>.<span class="ident">inner</span>, <span class="ident">channel</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">stride</span>) };
+        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">data</span>.<span class="ident">is_null</span>());
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">stride</span> <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">data</span>, <span class="ident">size</span>) };
         <span class="prelude-val">Some</span>(<span class="ident">Plane</span> {
@@ -456,12 +458,13 @@
     <span class="comment">//        res</span>
     <span class="comment">//    }</span>
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chroma_format</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Chroma</span> {
-        <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="ident">lh</span>::<span class="ident">heif_image_get_chroma_format</span>(<span class="self">self</span>.<span class="ident">inner</span>)) }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">color_space</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">ColorSpace</span> {
-        <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="ident">lh</span>::<span class="ident">heif_image_get_colorspace</span>(<span class="self">self</span>.<span class="ident">inner</span>)) }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">color_space</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ColorSpace</span><span class="op">&gt;</span> {
+        <span class="kw">unsafe</span> {
+            <span class="ident">ColorSpace</span>::<span class="ident">from_libheif</span>(
+                <span class="ident">lh</span>::<span class="ident">heif_image_get_colorspace</span>(<span class="self">self</span>.<span class="ident">inner</span>),
+                <span class="ident">lh</span>::<span class="ident">heif_image_get_chroma_format</span>(<span class="self">self</span>.<span class="ident">inner</span>),
+            )
+        }
     }
 
     <span class="doccomment">/// Scale image by &quot;nearest neighbor&quot; method.</span>
@@ -470,7 +473,7 @@
         <span class="ident">width</span>: <span class="ident">u32</span>,
         <span class="ident">height</span>: <span class="ident">u32</span>,
         <span class="ident">_scaling_options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ScalingOptions</span><span class="op">&gt;</span>,
-    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Image</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Image</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c_image</span> <span class="op">=</span> <span class="ident">MaybeUninit</span>::<span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>::<span class="ident">uninit</span>();
         <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">lh</span>::<span class="ident">heif_image_scale_image</span>(
@@ -487,13 +490,18 @@
         })
     }
 
+    <span class="doccomment">/// The indicated bit_depth corresponds to the bit depth per channel.</span>
+    <span class="doccomment">/// I.e. for interleaved formats like RRGGBB, the bit_depth would be, e.g., 10 bit instead</span>
+    <span class="doccomment">/// of 30 bits or 3*16=48 bits.</span>
+    <span class="doccomment">/// For backward compatibility, one can also specify 24bits for RGB and 32bits for RGBA,</span>
+    <span class="doccomment">/// instead of the preferred 8 bits.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_plane</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">channel</span>: <span class="ident">Channel</span>,
         <span class="ident">width</span>: <span class="ident">u32</span>,
         <span class="ident">height</span>: <span class="ident">u32</span>,
         <span class="ident">bit_depth</span>: <span class="ident">u8</span>,
-    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">lh</span>::<span class="ident">heif_image_add_plane</span>(
                 <span class="self">self</span>.<span class="ident">inner</span>,

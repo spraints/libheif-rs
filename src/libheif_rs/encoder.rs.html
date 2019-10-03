@@ -176,19 +176,23 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CString</span>;
 
 <span class="kw">use</span> <span class="ident">libheif_sys</span> <span class="kw">as</span> <span class="ident">lh</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">enums</span>::{<span class="ident">EncoderParameterType</span>, <span class="ident">EncoderParameterValue</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">utils</span>::<span class="ident">cstr_to_str</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">EncoderQuality</span>, <span class="ident">HeifError</span>, <span class="ident">HeifErrorCode</span>, <span class="ident">HeifErrorSubCode</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">EncoderParameterType</span>, <span class="ident">EncoderParameterValue</span>, <span class="ident">EncoderQuality</span>, <span class="ident">HeifError</span>, <span class="ident">HeifErrorCode</span>,
+    <span class="ident">HeifErrorSubCode</span>, <span class="prelude-ty">Result</span>,
+};
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EncoderParametersTypes</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">EncoderParameterType</span><span class="op">&gt;</span>;
 
-<span class="kw">fn</span> <span class="ident">parameters_types</span>(<span class="ident">c_encoder</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">lh</span>::<span class="ident">heif_encoder</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncoderParametersTypes</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">parameters_types</span>(<span class="ident">c_encoder</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">lh</span>::<span class="ident">heif_encoder</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncoderParametersTypes</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">EncoderParametersTypes</span>::<span class="ident">new</span>();
     <span class="kw">unsafe</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">param_pointers</span> <span class="op">=</span> <span class="ident">lh</span>::<span class="ident">heif_encoder_list_parameters</span>(<span class="ident">c_encoder</span>);
@@ -224,7 +228,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Encoder</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">c_encoder</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">lh</span>::<span class="ident">heif_encoder</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Encoder</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">c_encoder</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">lh</span>::<span class="ident">heif_encoder</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Encoder</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">Encoder</span> {
             <span class="ident">inner</span>: <span class="ident">c_encoder</span>,
             <span class="ident">parameters_types</span>: <span class="ident">parameters_types</span>(<span class="ident">c_encoder</span>)<span class="question-mark">?</span>,
@@ -236,7 +240,7 @@
         <span class="ident">cstr_to_str</span>(<span class="ident">res</span>).<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_quality</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">quality</span>: <span class="ident">EncoderQuality</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_quality</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">quality</span>: <span class="ident">EncoderQuality</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">err</span>;
         <span class="kw">match</span> <span class="ident">quality</span> {
             <span class="ident">EncoderQuality</span>::<span class="ident">LossLess</span> <span class="op">=&gt;</span> {
@@ -257,7 +261,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">parameter_type</span>: <span class="ident">EncoderParameterType</span>,
-    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncoderParameterValue</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncoderParameterValue</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">c_param_name</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">name</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">param_value</span>;
         <span class="kw">match</span> <span class="ident">parameter_type</span> {
@@ -309,7 +313,7 @@
         <span class="self">self</span>.<span class="ident">parameters_types</span>.<span class="ident">keys</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parameter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EncoderParameterValue</span><span class="op">&gt;</span>, <span class="ident">HeifError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parameter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EncoderParameterValue</span><span class="op">&gt;&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parameters_types</span>.<span class="ident">get</span>(<span class="ident">name</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">param_type</span>) <span class="op">=&gt;</span> {
                 <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parameter_value</span>(<span class="ident">name</span>, <span class="kw-2">*</span><span class="ident">param_type</span>)<span class="question-mark">?</span>;
